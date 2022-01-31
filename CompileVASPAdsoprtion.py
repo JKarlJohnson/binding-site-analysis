@@ -1,6 +1,6 @@
 #COMPILE VASP ADSOPRTION DATA
 #INPUT: VASP CONTCAR DATA, PARAMETER .txt FILE
-#EVAN KERIN - EDIT 1.26.2022
+#EVAN KERIN - EDIT 1.31.2022
 #PYTHON 3.9.7
 
 from ase import atoms
@@ -166,6 +166,16 @@ def get_Contcar_Data(filename):
 
 
 
+def getOSZICARE(filename):
+
+    with open(filename, 'rb') as f:
+        f.seek(-2, os.SEEK_END)
+        while f.read(1) != b'\n':
+            f.seek(-2, os.SEEK_CUR)
+        energy_Data = f.readline().decode()
+    
+    return(energy_Data)
+
 
 
 
@@ -180,38 +190,62 @@ ws['B1'].value = "Identifier & Adsorbate Atom"
 ws['C1'].value = "Adsorbent Atom"
 ws['D1'].value = "Distance (Angstrom)"
 ws['E1'].value = "Classification"
+ws['F1'].value = "Energies"
 
 ws.column_dimensions['A'].width = 30
 ws.column_dimensions['B'].width = 30
 ws.column_dimensions['C'].width = 30
 ws.column_dimensions['D'].width = 30
 ws.column_dimensions['E'].width = 30
+ws.column_dimensions['F'].width = 50
 
 #CALLING FUNCTIONS 
+xlrow = 2
 
 for item in range(dirNum):
         filename = str(dirList[item])
+
+
+
         if '.CONTCAR' in filename:
+
+            if OSZICAR == True:
+                
+                filenameFront = filename.replace(".CONTCAR","")
+                
+                for finder in range(dirNum):
+                    filenameFinder = str(dirList[finder])
+
+                    if filenameFront in filenameFinder:
+
+                        OZfilename = filenameFront + ".OSZICAR"
+                        energy_Data = getOSZICARE(OZfilename)
+                        xlPlaceF = 'F' + str(xlrow)
+                        ws[xlPlaceF].value = energy_Data
+
+
+
 
             dataList = get_Contcar_Data(filename)
            
             for i in range(len(dataList)):
                 
-                xlPlaceAbefore = 'A' + str(i+1)
-                xlPlaceA = 'A' + str(i+2)
-                xlPlaceB = 'B' + str(i+2)
-                xlPlaceC = 'C' + str(i+2)
-                xlPlaceD = 'D' + str(i+2)
-                xlPlaceE = 'E' + str(i+2)
+                xlPlaceA = 'A' + str(xlrow)
+                xlPlaceB = 'B' + str(xlrow)
+                xlPlaceC = 'C' + str(xlrow)
+                xlPlaceD = 'D' + str(xlrow)
+                xlPlaceE = 'E' + str(xlrow)
 
                 dataListLine = dataList[i]
-                
                
                 ws[xlPlaceA].value = dataListLine[0]
                 ws[xlPlaceB].value = dataListLine[1]
                 ws[xlPlaceC].value = dataListLine[2]
                 ws[xlPlaceD].value = dataListLine[3]
                 ws[xlPlaceE].value = dataListLine[4]
+
+                xlrow = xlrow + 1
+
 
 
 wb.save(filename = 'DataResults.xlsx')
